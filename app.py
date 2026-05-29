@@ -1,15 +1,14 @@
 import streamlit as st
 
-# 1. 페이지 기본 설정 및 보안/공신력 타이틀 세팅
-st.set_page_config(page_title="Tax-Check: 청년창업 최종 마스터피스", layout="wide")
-st.title("🚀 Tax-Check: 예비 청년사업자 세법 종합 진단")
-st.caption("🔥 2026년 현행세법 기준 ")
+# 1. 페이지 기본 설정 및 타이틀 세팅 (정직하고 신뢰감 있는 타이틀로 변경)
+st.set_page_config(page_title="Tax-Check: 청년창업 세법 시뮬레이터", layout="wide")
+st.title("🚀 Tax-Check: 예비 청년사업자 창업세액감면 및 재무 시뮬레이터")
+st.caption("📊 정부 조세특례제한법 제6조 및 현행세법 반영")
 
-st.info("### 📌 청년 개인사업자 맞춤형 세제 혜택 및 리스크 스크리닝")
+st.info("### 📌 사용자가 입력한 사업 계획 데이터를 기반으로 실제 세액 감면 및 리스크 금액을 연산합니다.")
 
-# 
 # -------------------------------------------------------------------------
-# [원천 데이터] 대한민국 전체 행정구역 100% 전수 나열 및 세법 권역 매핑 데이터베이스
+# [원천 데이터] 대한민국 행정구역 세법 권역 매핑 데이터베이스 (3단계 권역 완벽 반영)
 # -------------------------------------------------------------------------
 REGION_DATA = {
     "서울특별시": {
@@ -110,6 +109,7 @@ REGION_DATA = {
         "default_zone": "비수도권"
     }
 }
+
 # 2. 사용자 입력 섹션 (UI 구성)
 st.header("👤 창업 및 사업 계획 입력")
 
@@ -119,15 +119,12 @@ with col1:
     st.subheader("[1] 기본 정보 및 창업 지역/업종")
     age = st.number_input("현재 만 나이를 입력하세요 (군 복무 기간은 최대 6년 차감 가능)", min_value=0, max_value=100, value=25)
     
-    # 주소 자동 연동 시스템
     sido = st.selectbox("창업 예정 지역의 '시/도'를 선택하세요", list(REGION_DATA.keys()))
     sigungu = st.selectbox("상세 시/군/구를 선택하세요", REGION_DATA[sido]["districts"])
     
-    # 내부 행정구역 권역 판별 알고리즘
     sido_db = REGION_DATA[sido]
     location_status = sido_db["mapping"][sigungu] if "mapping" in sido_db and sigungu in sido_db["mapping"] else sido_db["default_zone"]
 
-    # 조세특례제한법 제6조 제3항 기반 세법 표준 대분류 업종 스키마
     business_type = st.selectbox(
         "창업 예정인 사업의 종류(업종)를 선택하세요 (조특법 세법 표준 대분류 적용)",
         [
@@ -137,7 +134,7 @@ with col1:
             "정보통신업 (소프트웨어 개발, 게임 제작, 앱 개발, IT 플랫폼 등)",
             "연구개발업 / 전문·과학·기술 서비스업 (디자인, 광고대행, 경영컨설팅 등)",
             "음식점업 (일반식당, 카페, 제과점, 베이커리 등)",
-            "물류산업 / 운수업 (창업 배송, 여객운송, 물류창고 등)",
+            "물류산업 / 운수업 (창업 배송, 여객운송,물류창고 등)",
             "사업시설 관리, 사업 지원 및 임대 서비스업 (고용알선, 여행사 등)",
             "이·미용업 / 뷰티서비스업 (미용실, 네일숍, 바버샵 등)",
             "직업기술분야 학원 및 예술학원 (기술/무용/연기/미술 학원 등)",
@@ -153,120 +150,203 @@ with col1:
     is_export = st.radio("해외 수출이나 역직구(해외 매출) 계획이 있으신가요?", ["오직 국내 매출만 발생", "해외 수출 및 글로벌 매출 계획 있음"])
 
 with col2:
-    st.subheader("[2] 사업 규모 및 고용/자산/기부 계획")
+    st.subheader("[2] 시뮬레이션용 재무 및 고용 데이터")
     
-    # [UX 업그레이드] 콤마(,) 입력을 지원하는 매출액 텍스트 인풋창
-    sales_input = st.text_input("예상되는 연간 매출액을 입력하세요",)
-    # 사용자가 입력한 문자열에서 콤마를 제거하고 숫자로 변환하는 예외 처리 파싱
+    sales_input = st.text_input("예상되는 연간 매출액을 입력하세요 (원 단위)")
     try:
         expected_sales = float(sales_input.replace(",", ""))
     except ValueError:
         expected_sales = 0.0
-        st.error(" 매출액에는 숫자와 콤마(,)만 입력할 수 있습니다.")
-        
+        st.error("매출액에는 숫자와 콤마(,)만 입력할 수 있습니다.")
+
+    income_rate = st.slider("예상 매출액 대비 순이익률(%)을 선택하세요 (종합소득세 산출 기준)", min_value=1, max_value=100, value=30)
+    # 진짜 소득금액(과세표준 대용) 수학적 연산
+    estimated_income = expected_sales * (income_rate / 100)
+    
     bookkeeping = st.radio("사업 장부를 스스로 작성하여 신고하실 계획인가요?", ["네, 스스로 작성하겠습니다.", "아니오, 장부 없이 간편하게 신고하겠습니다."])
-    employee_plan = st.radio("나 외에 직원을 정규직(청년)으로 채용할 계획이 있으신가요?", ["혼자 일할 예정(1인 기업)", "직원을 채용할 예정"])
+    
+    # 텍스트가 아닌 실제 채용 인원 '숫자'를 입력받아 연산에 활용
+    employee_count = st.number_input("채용할 청년 정규직 직원 수를 입력하세요 (명)", min_value=0, max_value=100, value=0)
+    
     initial_investment = st.radio("초기에 대규모 인테리어나 고가 장비 구입 계획이 있으신가요?", ["없음 (소자본 창업)", "있음 (인테리어 및 시설 자금 대량 투입)"])
     
-    # 소득세법 제34조 기부금 세연 연동 인풋
-    donation_plan = st.radio("지역사회 기부 및 사회공헌(ESG) 기부금 지출 계획이 있으신가요?", ["계획 없음", "연간 일정 금액 기부 계획 있음"])
-    
-    donation_amount = 0.0
-    if donation_plan == "연간 일정 금액 기부 계획 있음":
-        # [UX 업그레이드] 콤마(,) 입력을 지원하는 기부금 텍스트 인풋창
-        donation_input = st.text_input("예상하는 연간 총 기부 금액을 입력하세요",)
-        try:
-            donation_amount = float(donation_input.replace(",", ""))
-        except ValueError:
-            donation_amount = 0.0
-            st.error(" 기부 금액에는 숫자와 콤마(,)만 입력할 수 있습니다.")
+    donation_input = st.text_input("연간 예상되는 사회공헌 기부 금액을 입력하세요 (원 단위)", value="0")
+    try:
+        donation_amount = float(donation_input.replace(",", ""))
+    except ValueError:
+        donation_amount = 0.0
+        st.error("기부 금액에는 숫자와 콤마(,)만 입력할 수 있습니다.")
             
     property_plan = st.radio("창업 후 4년 이내에 사업용 부동산(사무실 등)을 매입할 계획이 있으신가요?", ["있음", "없음"])
+    property_type = "상가/오피스텔/토지 매입"
+    property_price = 0.0
+    
+    if property_plan == "있음":
+        # 사용자가 선택한 값이 property_type 변수에 저장됩니다.
+        property_type = st.selectbox(
+            "매입할 부동산의 종류 및 취득 방식을 선택하세요",
+            ["상가/오피스텔/토지 매입", "건물 직접 신축 (원시취득)", "6억 이하 주택 유상 매입", "6억 초과 ~ 9억 이하 주택 매입", "9억 초과 주택 매입"]
+        )
+        property_input = st.text_input("매입하려는 부동산의 예상 가액을 입력하세요", value="200,000,000")
+        try:
+            property_price = float(property_input.replace(",", ""))
+        except ValueError:
+            property_price = 0.0
 
 st.markdown("---")
 
-# 3. 매칭 알고리즘 및 결과 연산
+# 3. 매칭 및 수학적 연산 시뮬레이션 엔진
 if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"):
-    st.header("📋 세법별 진단 결과 보고서 (청년 개인사업자 전용)")
+    st.header("📋 세법별 시뮬레이션 결과 보고서")
     
     is_young = age <= 34
     is_self_book = "네" in bookkeeping
     is_small_business = expected_sales <= 104000000
     is_eligible_business = "🚫" not in business_type 
     
+    # 💡 2026년 국세청 오피셜 8단계 종합소득세 누진세율 계산 함수
+    def calculate_progressive_tax(income):
+        if income <= 14000000:
+            return income * 0.06
+        elif income <= 50000000:
+            return (income * 0.15) - 1260000
+        elif income <= 88000000:
+            return (income * 0.24) - 576000
+        elif income <= 150000000:
+            return (income * 0.35) - 1544000
+        elif income <= 300000000:
+            return (income * 0.38) - 1994000
+        elif income <= 500000000:
+            return (income * 0.40) - 2594000
+        elif income <= 1000000000:
+            return (income * 0.42) - 3594000
+        else:
+            return (income * 0.45) - 6594000
+
+    # 국가 누진세율 함수를 실행하여 기본 산출세액 도출
+    base_tax = calculate_progressive_tax(estimated_income)
+    
     status_kr = {"내": "수도권 과밀억제권역 내(핵심지)", "외곽": "수도권 과밀억제권역 외곽(성장관리지역 등)", "비수도권": "비수도권 지방지역"}[location_status]
-    st.success(f"📍선택하신 주소는 세법상 [{status_kr}]으로 분류되었습니다.")
+    st.success(f"📍 선택하신 주소는 세법상 [{status_kr}]으로 분류되었습니다.")
     
     res_col1, res_col2 = st.columns(2)
     
     with res_col1:
-        # A. 소득세 감면 및 고용/기부 특례 (조특법 및 소득세법)
         st.subheader("1. 소득세 감면 및 특별 공제 (조세특례제한법/소득세법)")
+        
+        # A. 창업중소기업 세액감면 연산 (조특법 제6조)
         if not is_eligible_business:
+            reduction_rate = 0.0
             st.error("❌ **[업종 제한] 창업세액감면 대상 제외 업종입니다.**")
-            st.write(f"선택하신 업종은 **조세특례제한법 제6조 제3항**이 규정하는 감면 열거 업종에 해당하지 않아, 청년창업 소득세 100% 감면 혜택을 적용받을 수 없습니다.")
+            st.write("선택하신 업종은 조특법 제6조에 열거된 감면 대상이 아니므로 소득세 감면율은 **0%**입니다.")
         else:
             if location_status == "비수도권":
-                if is_young or is_small_business:
-                    st.success("🎉 **[조특법 제6조 제1항] 5년간 소득세 100% 전액 감면 대상**")
-                else:
-                    st.warning("🔶 **[조특법 제6조] 5년간 소득세 50% 감면 대상**")
+                reduction_rate = 1.0 if (is_young or is_small_business) else 0.5
             elif location_status == "외곽":
-                if is_young or is_small_business:
-                    st.success("🎉 **[2026 개정세법] 5년간 소득세 75% 감면 대상**")
-                else:
-                    st.warning("🔶 **[조특법 제6조] 5년간 소득세 25% 감면 대상**")
+                reduction_rate = 1.0 if (is_young or is_small_business) else 0.5
             else: 
-                if is_young or is_small_business:
-                    st.warning("🔶 **[조특법 제6조 제2항] 5년간 소득세 50% 감면 대상**")
+                reduction_rate = 0.5 if (is_young or is_small_business) else 0.0
+                
+            tax_savings = base_tax * reduction_rate
+            st.success(f"🎉 **[조특법 제6조] 창업세액감면율: {int(reduction_rate * 100)}% 적용**")
+            st.write(f"- 예상 순이익: **{int(estimated_income):,}원**")
+            st.write(f"- 가상 산출소득세: **{int(base_tax):,}원**")
+            st.write(f"- **최종 소득세 감면 혜택 액수: 약 {int(tax_savings):,}원 (5년간 매년 절세 가능)**")
+
+        # B. 통합고용세액공제 연산 (조특법 제29조의7)
+    
+    # B. 통합고용세액공제 연산 및 리스크 모델링 (조특법 제29조의7)
+        if employee_count > 0:
+            per_person_value = 14500000 if location_status == "비수도권" else 11000000
+            raw_employment_savings = employee_count * per_person_value
+            
+            st.info(f"👥 **[조특법 제29조의7] 통합고용세액공제 및 리스크 시뮬레이션**")
+            st.write(f"- 청년 정규직 채용 인원: **{employee_count}명** (인당 {per_person_value:,}원 적용)")
+            st.write(f"- 이론상 최대 공제 가능액: **{int(raw_employment_savings):,}원**")
+            
+            remaining_tax_window = base_tax - tax_savings
+            
+            if raw_employment_savings > remaining_tax_window:
+                actual_employment_savings = max(0.0, remaining_tax_window)
+                carried_over_savings = raw_employment_savings - actual_employment_savings
+                
+                # 💡 [UI 개선] 0원일 때와 아닐 때의 멘트를 분기하여 가독성 확보
+                if actual_employment_savings == 0:
+                    st.warning(f"⚠️ **[안내] 창업세액감면(100%) 적용으로 인해 올해 납부할 소득세가 이미 0원입니다.**")
+                    st.write(f"  * **금년도 실제 반영 공제액: 0원** (이번 해에 차감할 세액이 없음)")
                 else:
-                    st.error("❌ **청년 창업 세액감면 대상 제외**")
-                    
-        # 고용증대세액공제 (통합고용세액공제) 연계 연산
-        if "채용" in employee_plan:
-            bonus_amt = "1,450만 원" if location_status == "비수도권" else "1,100만 원"
-            st.info(f"👥 **[조특법 제29조의7] 통합고용세액공제 연계 혜택**\n\n청년 개인사업자가 청년 정규직 직원을 채용할 경우, 국가에서 **인당 연간 최대 {bonus_amt}**의 소득세를 추가로 직접 공제해 줍니다.")
+                    st.warning(f"⚠️ **[최저한세 및 소득세 한도 도달]** 올해 납부할 예상 소득세 한도를 초과했습니다.")
+                    st.write(f"  * **금년도 실제 반영 공제액: {int(actual_employment_savings):,}원** (소득세 0원화 한도)")
+                
+                st.write(f"  * **다음 해로 이월되는 공제액: {int(carried_over_savings):,}원** (향후 10년간 이월공제 가능)")
+            else:
+                actual_employment_savings = raw_employment_savings
+                st.write(f"  * **금년도 실제 반영 공제액: {int(actual_employment_savings):,}원** (전액 공제 가능)")
+            
+            st.error(f"🚨 **[조특법 제29조의7 제4항] 고용유지 의무 위반 추징 리스크**")
+            st.write(f"  * **고용 유지 실패 시 최대 예상 추징 세액: {int(raw_employment_savings):,}원**")
 
-        # 소득세법 제34조 기부금 세법 매칭 알고리즘
-        if donation_plan == "연간 일정 금액 기부 계획 있음" and donation_amount > 0:
-            est_saving_15 = int(donation_amount * 0.15)
-            st.success(f"🕊️ **[소득세법 제34조] 기부금 절세 특례 매칭**\n\n지출한 기부금은 복식/간편장부 작성 시 **'필요경비(사업 비용)'로 산입**하여 종합소득세 과세표준 자체를 낮추거나, 장부 미작성 시에도 기부 금액의 15%에 달하는 **약 {est_saving_15:,}원**을 최종 소득세액에서 직접 공제받을 수 있습니다.")
+        # C. 기부금 세액공제 연산 (소득세법 제59조의4)
+        if donation_amount > 0:
+            donation_savings = donation_amount * 0.15
+            st.success(f"🕊️ **[소득세법 제59조의4] 기부금 절세 혜택 계산**")
+            st.write(f"- 입력한 사회공헌 기부액: **{int(donation_amount):,}원**")
+            st.write(f"- **추계신고 시 최종 소득세 직접 차감액: {int(donation_savings):,}원 (지출액의 15%)**")
 
-        # B. 소득세법 진단 (장부 의무)
+        # D. 장부 미기장 가산세 연산 (소득세법 제81조의5)
         st.subheader("2. 장부 작성 및 가산세 리스크 (소득세법)")
         if is_self_book:
-            st.success("✅ **[소득세법 제70조] 기장세액공제 혜택 가능**")
+            st.success("✅ **[소득세법 제70조] 장부 기장 신고 예정 (가산세 위험 없음)**")
         else:
-            st.error("🚨 **[소득세법 제81조의5] 무기장가산세 처분 주의**")
+            penalty_tax = base_tax * 0.20
+            st.error("🚨 **[소득세법 제81조의5] 무기장가산세 처분 리스크 노출**")
+            st.write(f"- 장부 미작성 및 추계신고 시 소득세 산출세액의 **20% 패널티**가 부과됩니다.")
+            st.write(f"- **예상 부과 가산세 리스크 액수: 약 {int(penalty_tax):,}원 부과 주의**")
 
     with res_col2:
-        # C. 부가가치세법 진단
         st.subheader("3. 부가가치세 면제 및 환급 특례 (부가가치세법)")
-        if expected_sales < 48000000:
-            st.success("🎉 **[부가세법 제69조 제1항] 부가가치세 납부 의무 전액 면제!**")
-        elif expected_sales < 140000000:
-            st.info("✅ **[부가세법 제61조 제1항] 간이과세자 적용 가능 권역**")
+        
+        # A. 부가세 면제 및 간이과세 판별 연산
+        if int(expected_sales) < 48000000:
+            st.success("🎉 **[부가세법 제69조 제1항] 연 매출 4,800만 원 미만으로 부가가치세 납부 의무 전액 면제!**")
+        elif int(expected_sales) < 140000000:
+            st.info(f"✅ **[부가세법 제61조 제1항] 연 매출 {int(expected_sales):,}원: 간이과세자 적용 권역**")
         else:
-            st.warning("🔶 **일반과세자 자동 전환 대상**")
+            st.warning("🔶 **연 매출 1.4억 원 이상: 일반과세자 자동 전환 대상 (간이과세 배제)**")
             
         if "해외 수출" in is_export:
-            st.success("✈️ **[부가세법 제24조] 외화 획득 사업자 영세율(0%) 적용**")
+            st.success("✈️ **[부가세법 제24조] 외화 획득 사업자 영세율(0%) 적용 대상**")
         if "있음" in initial_investment:
-            st.info("💰 **[부가세법 제59조] 초기 투자자산 부가가치세 조기환급 특례**")
+            st.info("💰 **[부가세법 제59조] 초기 시설 투자 자산 부가가치세 15일 이내 조기환급 특례 가능**")
 
-        # D. 지방세특례제한법 진단
-        st.subheader("4. 창업 지방세 혜택 및 사후관리 (지방세특례제한법)")
-        if not is_eligible_business:
-            st.error("❌ **[업종 제한] 지방세 특례 감면 제외 업종입니다.**")
-        else:
-            if is_young and location_status != "내":
-                st.success("🎉 **[지특법 제58조의3 제1항] 창업 법인/사업자 등록면허세 75% 감면**")
-                
-            if property_plan == "있음":
-                if (is_young or is_small_business) and location_status != "내":
-                    st.success("🎉 **[지특법 제58조의3 제1항] 사업용 부동산 취득세 75% 및 재산세 50% 감면**")
-                    st.error("🚨 **[지특법 제58조의3 제4항] 사후관리 조항 (추징 주의)**")
-                else:
-                    st.error("❌ **지방세 부동산 감면 대상 제외**")
+        # B. 지방세 및 부동산 추징 리스크 연산 (지특법 제58조의3)
+            st.subheader("4. 창업 지방세 혜택 및 사후관리")
+        if is_eligible_business and property_plan == "있음" and property_price > 0:
+            
+            # 부동산 타입별 정확한 세법상 실효세율 주입
+            if property_type == "상가/오피스텔/토지 매입":
+                tax_rate = 0.046
+            elif property_type == "건물 직접 신축 (원시취득)":
+                tax_rate = 0.0316
+            elif property_type == "6억 이하 주택 유상 매입":
+                tax_rate = 0.011
+            elif property_type == "6억 초과 ~ 9억 이하 주택 매입":
+                tax_rate = 0.022  # 평균 실효세율 대리 위임
             else:
-                st.write("부동산 매입 계획이 없으므로 부동산 취득세 시뮬레이션을 종료합니다.")
+                tax_rate = 0.035
+                
+            normal_tax = property_price * tax_rate
+            
+            if location_status != "내":
+                discounted_tax = normal_tax * 0.25
+                potential_penalty = normal_tax * 0.75
+                st.success(f"🎉 **[지특법 제58조의3] 부동산 취득세 감면 시뮬레이션 ({property_type})**")
+                st.write(f"- 해당 부동산 법정 취득세율(부속세 포함): **{round(tax_rate * 100, 2)}%**")
+                st.write(f"- 감면 전 정상 취득세액: **{int(normal_tax):,}원**")
+                st.write(f"- **75% 감면 후 최종 납부 취득세: 약 {int(discounted_tax):,}원**")
+                st.error(f"🚨 **[지특법 제58조의3 제4항] 3년 내 미사용/매각 시 추징 리스크 금액: {int(potential_penalty):,}원**")
+            else:
+                st.error(f"❌ **[과밀억제권역 감면 배제] 과밀억제권역 내 부동산 취득은 취득세 {round(tax_rate * 100, 2)}% 전액 부과 대상입니다. (감면액 없음)**")
+                st.write(f"- 최종 납부 취득세액: **{int(normal_tax):,}원**")
+        else:
+            st.write("부동산 매입 계획이 없거나 감면 제외 업종이므로 취득세 시뮬레이션을 종료합니다.")
