@@ -187,7 +187,7 @@ with col2:
             "매입할 부동산의 종류 및 취득 방식을 선택하세요",
             ["상가/오피스텔/토지 매입", "건물 직접 신축 (원시취득)", "6억 이하 주택 유상 매입", "6억 초과 ~ 9억 이하 주택 매입", "9억 초과 주택 매입"]
         )
-        property_input = st.text_input("매입하려는 부동산의 예상 가액을 입력하세요", value="200,000,000")
+        property_input = st.text_input("매입하려는 부동산의 예상 가액을 입력하세요")
         try:
             property_price = float(property_input.replace(",", ""))
         except ValueError:
@@ -350,3 +350,9 @@ if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"
                 st.write(f"- 최종 납부 취득세액: **{int(normal_tax):,}원**")
         else:
             st.write("부동산 매입 계획이 없거나 감면 제외 업종이므로 취득세 시뮬레이션을 종료합니다.")
+
+
+st.markdown("---")
+st.markdown("### 🔗 2026년 현행세법 공식 근거 및 출처")
+st.markdown("- [국세법령정보시스템(NTIS) 공식 홈페이지](https://taxlaw.nts.go.kr/index.do;jsessionid=SMNCQgnjqZItG2EMTasnlm6zqswMe0hBAFBJ-zYD.cpesiwsp01_SE12)")
+st.markdown("- [국가법령정보센터 - 조세특례제한법 및 지방세특례제한법 조문](https://www.law.go.kr/)")
