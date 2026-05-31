@@ -1,9 +1,10 @@
 import streamlit as st
 
+
 # 1. 페이지 기본 설정 및 타이틀 세팅 (정직하고 신뢰감 있는 타이틀로 변경)
 st.set_page_config(page_title="Tax-Check: 청년창업 세법 시뮬레이터", layout="wide")
 st.title("🚀 Tax-Check: 예비 청년사업자 창업세액감면 및 재무 시뮬레이터")
-st.caption("📊 정부 조세특례제한법 제6조 및 현행세법 반영")
+st.caption("📊현행세법 반영")
 
 st.info("### 📌 사용자가 입력한 사업 계획 데이터를 기반으로 실제 세액 감면 및 리스크 금액을 연산합니다.")
 
@@ -22,6 +23,8 @@ sido = st.selectbox("시/도를 선택하세요", [
 
 reduction_rate = 0.0
 zone_name = ""
+location_status = "내" #하단 NameError 방지용 기본 안전장치 변수 선언
+
 
 # ==================== [1] 서울특별시 (전 지역 과밀) ====================
 if sido == "서울특별시":
@@ -32,6 +35,7 @@ if sido == "서울특별시":
     ])
     reduction_rate = 0.5
     zone_name = "수도권 과밀억제권역 (기본 소득세 50% 감면)"
+    location_status = "내" #  서울은 무조건 과밀억제권역 '내'
 
 # ==================== [2] 인천광역시 (마이크로 동 단위 분기) ====================
 elif sido == "인천광역시":
@@ -43,6 +47,7 @@ elif sido == "인천광역시":
         dong = st.selectbox("세부 행정동/법정동을 선택하세요", ["선택하세요"] + special_dongs + normal_dongs)
         reduction_rate = 1.0 if dong in special_dongs else 0.5
         zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+        location_status = "외곽" if reduction_rate == 1.0 else "내" # 🚨 100% 구역은 '외곽', 그 외 '내'
         
     elif sigungu == "연수구":
         songdo_dongs = ["송도동 (송도국제도시)", "인천경제자유구역 송도지구"]
@@ -50,6 +55,7 @@ elif sido == "인천광역시":
         dong = st.selectbox("세부 행정동/법정동을 선택하세요", ["선택하세요"] + songdo_dongs + normal_dongs)
         reduction_rate = 1.0 if dong in songdo_dongs else 0.5
         zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+        location_status = "외곽" if reduction_rate == 1.0 else "내"
 
     elif sigungu == "중구":
         youngjong_dongs = ["운서동", "운남동", "운북동", "중산동", "남북동", "덕교동", "을왕동", "무의동"]
@@ -57,56 +63,89 @@ elif sido == "인천광역시":
         dong = st.selectbox("세부 행정동/법정동을 선택하세요", ["선택하세요"] + youngjong_dongs + normal_dongs)
         reduction_rate = 1.0 if dong in youngjong_dongs else 0.5
         zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+        location_status = "외곽" if reduction_rate == 1.0 else "내"
             
     elif sigungu in ["부평구", "계양구", "미추홀구", "남동구"]:
         reduction_rate = 0.5
         zone_name = "수도권 과밀억제권역 (50% 감면)"
+        location_status = "내"
     elif sigungu in ["강화군", "옹진군"]:
         reduction_rate = 1.0
         zone_name = "수도권 외 성장관리권역 (100% 면제)"
+        location_status = "외곽"
 
 # ==================== [3] 경기도 (마이크로 읍/면/동 분기) ====================
 elif sido == "경기도":
+    
     sigungu = st.selectbox("시/군/구를 선택하세요", [
-        "선택하세요", "남양주시", "시흥시", "고양시", "수원시", "성남시", "안양시", "부천시", 
-        "광명시", "과천시", "의왕시", "군포시", "구리시", "평택시", "파주시", "김포시", 
-        "광주시", "이천시", "오산시", "안성시", "포천시", "양주시", "여주시", "연천군", "가평군", "양평군"
+        "선택하세요", "남양주시", "시흥시", "고양시", "안산시", "용인시", "화성시", 
+        "수원시", "성남시", "안양시", "부천시", "광명시", "과천시", "의왕시", "군포시", "구리시", "하남시",
+        "평택시", "파주시", "김포시", "광주시", "이천시", "오산시", "안성시", "포천시", "양주시", "여주시", "동두천시", "연천군", "가평군", "양평군"
     ])
     
+    # 1. 남양주시 (정밀 분기 유지)
     if sigungu == "남양주시":
         towns_100 = ["와부읍", "진접읍", "화도읍", "진건읍", "오남읍", "별내면", "수동면", "조안면", "퇴계원읍"]
         towns_50 = ["호평동", "평내동", "금곡동", "양정동", "다산동", "별내동"]
         dong = st.selectbox("세부 읍/면/동을 선택하세요", ["선택하세요"] + towns_100 + towns_50)
         reduction_rate = 1.0 if dong in towns_100 else 0.5
         zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
-            
+        location_status = "외곽" if reduction_rate == 1.0 else "내" # 🚨 읍면은 '외곽', 동은 '내'
+        
+    # 2. 시흥시 (글자 매칭 버그 해결, 칼같은 1:1 매칭 분기)
     elif sigungu == "시흥시":
         industrial_zones = ["정왕동 (시화MTV 구역)", "반월특수지역 지정구역", "시화공단 내부"]
         normal_zones = ["연성동", "신천동", "은행동", "매화동", "목감동", "군자동", "정왕동 (일반 주거지역)"]
         dong = st.selectbox("세부 지역 및 동을 선택하세요", ["선택하세요"] + industrial_zones + normal_zones)
         reduction_rate = 1.0 if dong in industrial_zones else 0.5
-        zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+        zone_name = "성장관리권역 (반월특수지역 특례 - 100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+        location_status = "외곽" if reduction_rate == 1.0 else "내" # 🚨 특수공단 구역은 '외곽', 일반 동은 '내'
 
-    elif sigungu == "고양시":
-        goyang_100 = ["대화동 일부", "장항동 산업구역", "송포동 일대", "덕양구 효자동 예외구역"]
-        goyang_50 = ["화정동", "행신동", "식사동", "마두동", "백석동", "주엽동", "탄현동"]
-        dong = st.selectbox("세부 행정구역을 선택하세요", ["선택하세요"] + goyang_100 + goyang_50)
-        reduction_rate = 1.0 if dong in goyang_100 else 0.5
-        zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+    # 3. 안산시 (새로 추가된 혼재 지역 1)
+    elif sigungu == "안산시":
+        industrial_zones = ["반월국가산업단지 내부", "대부동 (대부도 전역)"]
+        normal_zones = ["상록구 동지역 전체", "단원구 일반 동지역 전체"]
+        dong = st.selectbox("세부 지역 및 동을 선택하세요", ["선택하세요"] + industrial_zones + normal_zones)
+        reduction_rate = 1.0 if dong in industrial_zones else 0.5
+        zone_name = "성장관리권역 (산업단지/지방 특례 - 100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+        location_status = "외곽" if reduction_rate == 1.0 else "내"
 
-    elif sigungu in ["수원시", "성남시", "안양시", "부천시", "광명시", "과천시", "의왕시", "군포시", "구리시"]:
+    # 4. 용인시 (새로 추가된 혼재 지역 2)
+    elif sigungu == "용인시":
+        towns_100 = ["처인구 포곡읍", "처인구 모현읍", "처인구 남사읍", "처인구 이동읍", "처인구 원삼면", "처인구 백암면", "처인구 양지면", "처인구 중앙동", "처인구 역삼동", "처인구 유림동", "처인구 동부동"]
+        towns_50 = ["수지구 전역", "기흥구 전역", "처인구 구성동", "처인구 마북동", "처인구 동백동", "처인구 상하동"]
+        dong = st.selectbox("세부 구/읍/면/동을 선택하세요", ["선택하세요"] + towns_100 + towns_50)
+        reduction_rate = 1.0 if dong in towns_100 else 0.5
+        zone_name = "자연보전권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+        location_status = "외곽" if reduction_rate == 1.0 else "내"
+
+    # 5. 화성시 (새로 추가된 혼재 지역 3)
+    elif sigungu == "화성시":
+        towns_50 = ["반월동", "병점1동", "병점2동", "진안동", "황계동", "기산동", "능동"]
+        towns_100 = ["그 외 화성시 전역 (동탄신도시, 향남읍, 봉담읍, 남양읍, 우정읍, 마도면, 송산면 등)"]
+        dong = st.selectbox("세부 동/읍/면을 선택하세요", ["선택하세요"] + towns_100 + towns_50)
+        reduction_rate = 0.5 if dong in towns_50 else 1.0
+        zone_name = "과밀억제권역 예외지역 (50% 감면)" if reduction_rate == 0.5 else "성장관리권역 (100% 면제)"
+        location_status = "내" if reduction_rate == 0.5 else "외곽"
+
+    # 6. 100% 과밀억제권역 (고양시 포함, 하남시 누락 수정)
+    elif sigungu in ["수원시", "성남시", "안양시", "부천시", "광명시", "과천시", "의왕시", "군포시", "구리시", "하남시", "고양시"]:
         reduction_rate = 0.5
         zone_name = "수도권 과밀억제권역 (50% 감면)"
+        location_status = "내" # 🚨 100% 과밀도시들은 '내'
         
-    elif sigungu in ["평택시", "파주시", "김포시", "광주시", "이천시", "오산시", "안성시", "포천시", "양주시", "여주시", "연천군", "가평군", "양평군"]:
+    # 7. 100% 성장관리 / 자연보전권역 (동두천시 누락 수정)
+    elif sigungu in ["평택시", "파주시", "김포시", "광주시", "이천시", "오산시", "안성시", "포천시", "양주시", "여주시", "동두천시", "연천군", "가평군", "양평군"]:
         reduction_rate = 1.0
         zone_name = "수도권 내 성장관리권역/자연보전권역 (100% 면제)"
+        location_status = "외곽" # 🚨 100% 성장관리/자연보전지역들은 '외곽'
+
+
 
 # ==================== [4] 지방 5대 광역시 (지방 광역시는 구 단위 50%, 읍면 100% 분기) ====================
 elif sido in ["부산광역시", "대구광역시", "광주광역시", "대전광역시", "울산광역시"]:
     if sido == "부산광역시":
         sigungu = st.selectbox("시/군/구를 선택하세요", ["해운대구", "수영구", "동래구", "금정구", "연제구", "부산진구", "남구", "북구", "사상구", "사하구", "중구", "동구", "서구", "영도구", "기장군", "강서구"])
-        # 부산 기장군 및 강서구 읍/면 지역은 지방 과밀 배제로 100% 면제
         reduction_rate = 1.0 if sigungu in ["기장군", "강서구"] else 0.5
     elif sido == "대구광역시":
         sigungu = st.selectbox("시/군/구를 선택하세요", ["중구", "동구", "서구", "남구", "북구", "수성구", "달서구", "달성군", "군위군"])
@@ -115,14 +154,13 @@ elif sido in ["부산광역시", "대구광역시", "광주광역시", "대전�
         sigungu = st.selectbox("시/군/구를 선택하세요", ["중구", "남구", "동구", "북구", "울주군"])
         reduction_rate = 1.0 if sigungu == "울주군" else 0.5
     else:
-        # 광주, 대전은 전체 구 지역이 50% 감면 대상 (지방 광역시 구 지역 기준)
         sigungu = st.selectbox("시/군/구를 선택하세요", ["전 지역 구"])
         reduction_rate = 0.5
     zone_name = "지방 광역시 감면 요건 (100% 면제)" if reduction_rate == 1.0 else "지방 광역시 구 권역 (50% 감면)"
+    location_status = "비수도권" # 🚨 광역시는 '비수도권'
 
 # ==================== [5] 순수 지방 도 지역 ====================
 elif sido in ["세종특별자치시", "충청남도", "충청북도", "전라남도", "전라북도", "경상남도", "경상북도", "강원특별자치도", "제주특별자치도"]:
-    # 순수 지방 도 지역은 과밀억제권역 자체가 존재하지 않으므로 구/시/군 상관없이 무조건 100% 전액 면제입니다.
     if sido == "충청남도":
         sigungu = st.selectbox("시/군을 선택하세요", ["천안시", "아산시", "당진시", "서산시", "공주시", "논산시", "보령시", "계룡시", "홍성군", "예산군", "태안군", "금산군", "부여군", "서천군", "청양군"])
     elif sido == "전라남도":
@@ -136,6 +174,7 @@ elif sido in ["세종특별자치시", "충청남도", "충청북도", "전라�
         
     reduction_rate = 1.0
     zone_name = "수도권 외 지방 청년창업 특례 지역 (100% 전액 면제)"
+    location_status = "비수도권" # 🚨 일반 지방 도 지역은 '비수도권'
 
 # 결과 출력부
 if reduction_rate > 0.0:
@@ -386,3 +425,5 @@ st.markdown("---")
 st.markdown("### 🔗 2026년 현행세법 공식 근거 및 출처")
 st.markdown("- [국세법령정보시스템(NTIS) 공식 홈페이지](https://taxlaw.nts.go.kr/index.do;jsessionid=SMNCQgnjqZItG2EMTasnlm6zqswMe0hBAFBJ-zYD.cpesiwsp01_SE12)")
 st.markdown("- [국가법령정보센터 - 조세특례제한법 및 지방세특례제한법 조문](https://www.law.go.kr/)")
+
+
