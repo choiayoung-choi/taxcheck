@@ -191,9 +191,27 @@ st.header("👤 창업 및 사업 계획 입력")
 col1, col2 = st.columns(2)
 
 with col1:
+    
     st.subheader("[1] 기본 정보 및 창업 업종")
-    age = st.number_input("현재 만 나이를 입력하세요 (군 복무 기간은 최대 6년 차감 가능)", min_value=0, max_value=100, value=25)
+    
+    # 1. 만 나이 입력
+    age = st.number_input("현재 만 나이를 입력하세요", min_value=0, max_value=100, value=25)
 
+    # 2. 군 복무 특례 UI 추가 (기존 코드에 자연스럽게 녹아듬)
+    has_served = st.radio("군 복무(병역 이행) 여부를 선택하세요", ["미필/해당 없음(여성 포함)", "군필(병역 이행 완료)"])
+    
+    service_years = 0
+    if has_served == "군필(병역 이행 완료)":
+        # 세법상 최대 6년까지만 인정되므로 마지노선을 6년으로 제한
+        service_years = st.number_input("실제 군 복무 기간을 입력하세요 (연 단위, 최대 6년 인정)", min_value=0, max_value=6, value=2)
+
+    # 🚨 세법상 최종 판정 나이 계산 (복무 기간만큼 나이를 차감)
+    final_age = age - service_years
+    
+    if has_served == "군필(병역 이행 완료)" and service_years > 0:
+        st.caption(f"💡 병역 특례 적용: 세법상 만 **{final_age}세**로 판정됩니다. (최대 만 34세까지 청년 창업 혜택 가능)")
+
+    #창업 업종 선택 
     business_type = st.selectbox(
         "창업 예정인 사업의 종류(업종)를 선택하세요 (조특법 세법 표준 대분류 적용)",
         [
@@ -237,8 +255,17 @@ with col2:
     # 텍스트가 아닌 실제 채용 인원 '숫자'를 입력받아 연산에 활용
     employee_count = st.number_input("채용할 청년 정규직 직원 수를 입력하세요 (명)", min_value=0, max_value=100, value=0)
     
-    initial_investment = st.radio("초기에 대규모 인테리어나 고가 장비 구입 계획이 있으신가요?", ["없음 (소자본 창업)", "있음 (인테리어 및 시설 자금 대량 투입)"])
     
+    initial_investment = st.radio("초기에 대규모 인테리어나 고가 장비 구입 계획이 있으신가요?", ["없음 (소자본 창업)", "있음 (인테리어 및 시설 자금 대량 투입)"])
+    investment_amount = 0.0
+
+    if initial_investment == "있음 (인테리어 및 시설 자금 대량 투입)":
+        investment_input = st.text_input("예상되는 초기 시설 투자 금액(인테리어, 장비 등 공급가액)을 입력하세요 (원 단위)", value="50,000,000")
+        try:
+              investment_amount = float(investment_input.replace(",", ""))
+        except ValueError:
+              investment_amount = 0.0
+
     donation_input = st.text_input("연간 예상되는 사회공헌 기부 금액을 입력하세요 (원 단위)", value="0")
     try:
         donation_amount = float(donation_input.replace(",", ""))
@@ -261,6 +288,18 @@ with col2:
             property_price = float(property_input.replace(",", ""))
         except ValueError:
             property_price = 0.0
+
+    # 조세특례제한법 제30조의5(창업자금에 대한 증여세 과세특례)
+    gift_plan = st.radio("부모님 등으로부터 창업자금 증여 지원을 받으실 계획이 있나요?", ["없음", "있음"])
+    gift_amount = 0.0
+    
+    if gift_plan == "있음":
+        st.caption("💡 [조특법 제30조의5] 창업자금 증여세 과세특례 시뮬레이션이 활성화됩니다.")
+        gift_input = st.text_input("증여받을(혹은 지원받은) 예상 창업자금을 입력하세요 (원 단위)", value="600,000,000")
+        try:
+            gift_amount = float(gift_input.replace(",", ""))
+        except ValueError:
+            gift_amount = 0.0
 
 st.markdown("---")
 
@@ -385,11 +424,29 @@ if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"
             
         if "해외 수출" in is_export:
             st.success("✈️ **[부가세법 제24조] 외화 획득 사업자 영세율(0%) 적용 대상**")
-        if "있음" in initial_investment:
-            st.info("💰 **[부가세법 제59조] 초기 시설 투자 자산 부가가치세 15일 이내 조기환급 특례 가능**")
+
+        # ❌ 기존 영세율/조기환급 st.info 코드 부근을 아래 코드로 싹 교체하세요!
+        if "해외 수출" in is_export:
+            st.success("✈️ **[부가세법 제24조] 외화 획득 사업자 영세율(0%) 적용 대상**")
+            
+        if initial_investment == "있음 (인테리어 및 시설 자금 대량 투입)" and investment_amount > 0:
+            # 시설 투자에 따른 환급 세액 계산 (10% 매입세액 환급)
+            expected_refund = investment_amount * 0.10
+            
+            st.success(f"💰 **[부가세법 제59조] 초기 시설 투자 조기환급 특례**")
+            st.write(f"- 시설 투자/인테리어 예상액: **{int(investment_amount):,}원**")
+            st.write(f"- **예상 부가가치세 조기 환급액: 약 {int(expected_refund):,}원**")
+            st.info(f"💡 일반 환급(최대 수개월 소요)과 달리, 확정/예정신고 후 **단 15일 이내**에 {int(expected_refund):,}원이 통장으로 즉시 조기 환급되어 초기 운전자금 확보에 유용합니다.")
+            st.caption("※ 단, 세금계산서 또는 신용카드 매출전표 등 정규 증빙을 반드시 수취해야 환급 처리가 가능합니다.")
+        else:
+            st.write("초기 대규모 시설 투자가 없으므로 조기환급 시뮬레이션을 종료합니다.")
+
+
+
+        
 
         # B. 지방세 및 부동산 추징 리스크 연산 (지특법 제58조의3)
-            st.subheader("4. 창업 지방세 혜택 및 사후관리")
+        st.subheader("4. 창업 지방세 혜택 및 사후관리")
         if is_eligible_business and property_plan == "있음" and property_price > 0:
             
             # 부동산 타입별 정확한 세법상 실효세율 주입
@@ -420,10 +477,47 @@ if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"
         else:
             st.write("부동산 매입 계획이 없거나 감면 제외 업종이므로 취득세 시뮬레이션을 종료합니다.")
 
+        # 창업자금 증여세 과세특례
+        st.subheader("5. 창업자금 증여세 과세특례 (조특법 제30조의5)")
+        if gift_plan == "있음" and gift_amount > 0:
+            # 1. 정상 증여세 계산 (대략적인 일반 세율 구간 적용 - 비교용)
+            if gift_amount <= 100000000:
+                normal_gift_tax = (gift_amount - 50000000) * 0.10
+            elif gift_amount <= 500000000:
+                normal_gift_tax = (gift_amount - 50000000) * 0.20 - 10000000
+            else:
+                normal_gift_tax = (gift_amount - 50000000) * 0.30 - 60000000
+            normal_gift_tax = max(0.0, normal_gift_tax)
+
+            # 2. 조특법 제30조의5 특례 증여세 계산
+            if gift_amount <= 500000000:
+                special_gift_tax = 0.0  # 5억 원까지는 전액 공제
+            else:
+                special_gift_tax = (gift_amount - 500000000) * 0.10  # 5억 초과분은 10% 단일세율
+            
+            # 3. 아낀 세금
+            gift_tax_savings = normal_gift_tax - special_gift_tax
+
+            st.success(f"🎁 **[특례 활성화] 창업자금 증여세 과세특례 적용 결과**")
+            st.write(f"- 총 증여 자금: **{int(gift_amount):,}원**")
+            st.write(f"- **기본 면제 금액 (비과세): 500,000,000원 (5억 전액 공제)**")
+            
+            if special_gift_tax == 0:
+                st.balloons()
+                st.success(f"🎉 **최종 납부할 증여세: 0원 (전액 면제!)**")
+            else:
+                st.warning(f"🔶 **최종 납부할 특례 증여세: 약 {int(special_gift_tax):,}원** (5억 초과분 10% 적용)")
+                
+            if gift_tax_savings > 0:
+                st.info(f"📈 **일반 증여 대비 절세 효과: 약 {int(gift_tax_savings):,}원 절감 효과**")
+                
+            st.error("⚠️ **[사후관리 주의사항]** 창업자금은 증여받은 날로부터 **2년 이내에 창업**해야 하며, **5년 이내에 창업자금 목적**으로 전액 사용해야 합니다. 위반 시 가산세와 함께 추징됩니다.")
+        else:
+            st.write("창업자금 증여 계획이 없으므로 증여세 특례 시뮬레이션을 종료합니다.")
 
 st.markdown("---")
 st.markdown("### 🔗 2026년 현행세법 공식 근거 및 출처")
 st.markdown("- [국세법령정보시스템(NTIS) 공식 홈페이지](https://taxlaw.nts.go.kr/index.do;jsessionid=SMNCQgnjqZItG2EMTasnlm6zqswMe0hBAFBJ-zYD.cpesiwsp01_SE12)")
-st.markdown("- [국가법령정보센터 - 조세특례제한법 및 지방세특례제한법 조문](https://www.law.go.kr/)")
+st.markdown("- [국가법령정보센터](https://www.law.go.kr/)")
 
 
