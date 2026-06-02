@@ -41,30 +41,46 @@ if sido == "서울특별시":
 elif sido == "인천광역시":
     sigungu = st.selectbox("시/군/구를 선택하세요", ["선택하세요", "서구", "연수구", "중구", "부평구", "계양구", "미추홀구", "남동구", "강화군", "옹진군"])
     
+
     if sigungu == "서구":
-        special_dongs = ["검단동", "대곡동", "불로동", "마전동", "금곡동", "오류동", "왕길동", "당하동", "원당동", "아라동"]
-        normal_dongs = ["가좌동", "석남동", "신현동", "청라동", "연희동", "심곡동", "공촌동", "경서동"]
-        dong = st.selectbox("세부 행정동/법정동을 선택하세요", ["선택하세요"] + special_dongs + normal_dongs)
-        reduction_rate = 1.0 if dong in special_dongs else 0.5
-        zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
-        location_status = "외곽" if reduction_rate == 1.0 else "내" # 🚨 100% 구역은 '외곽', 그 외 '내'
+        special_dongs = ["검단동", "대곡동", "불로동", "마전동", "금곡동", "오류동", "왕길동", "당하동", "원당동", "아라동", "가좌/석남/연희동 내 국가·지방산업단지 구역"]
+        normal_dongs = ["가좌동 (일반지역)", "석남동 (일반지역)", "신현동", "청라동", "연희동 (일반지역)", "심곡동", "공촌동", "경서동"]
         
+        dong = st.selectbox("세부 행정동/법정동을 선택하세요", ["선택하세요"] + special_dongs + normal_dongs)
+
+        if dong != "선택하세요":
+            reduction_rate = 1.0 if dong in special_dongs else 0.5
+            zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+            location_status = "외곽" if reduction_rate == 1.0 else "내"
+            is_ready = True # 👈 완벽히 골랐으니 결과 창 띄워도 된다고 허락!
+        
+
+
+
+
     elif sigungu == "연수구":
         songdo_dongs = ["송도동 (송도국제도시)", "인천경제자유구역 송도지구"]
         normal_dongs = ["옥련동", "선학동", "연수동", "청학동", "동춘동"]
         dong = st.selectbox("세부 행정동/법정동을 선택하세요", ["선택하세요"] + songdo_dongs + normal_dongs)
-        reduction_rate = 1.0 if dong in songdo_dongs else 0.5
-        zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
-        location_status = "외곽" if reduction_rate == 1.0 else "내"
 
+        
+        if dong != "선택하세요":
+            reduction_rate = 1.0 if dong in songdo_dongs else 0.5
+            zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+            location_status = "외곽" if reduction_rate == 1.0 else "내"
+            is_ready = True
+  
     elif sigungu == "중구":
         youngjong_dongs = ["운서동", "운남동", "운북동", "중산동", "남북동", "덕교동", "을왕동", "무의동"]
         normal_dongs = ["신포동", "연안동", "신흥동", "동인천동", "북성동"]
         dong = st.selectbox("세부 행정동/법정동을 선택하세요", ["선택하세요"] + youngjong_dongs + normal_dongs)
-        reduction_rate = 1.0 if dong in youngjong_dongs else 0.5
-        zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
-        location_status = "외곽" if reduction_rate == 1.0 else "내"
-            
+
+        if dong != "선택하세요":
+            reduction_rate = 1.0 if dong in youngjong_dongs else 0.5
+            zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+            location_status = "외곽" if reduction_rate == 1.0 else "내"
+            is_ready = True
+
     elif sigungu in ["부평구", "계양구", "미추홀구", "남동구"]:
         reduction_rate = 0.5
         zone_name = "수도권 과밀억제권역 (50% 감면)"
@@ -83,50 +99,67 @@ elif sido == "경기도":
         "평택시", "파주시", "김포시", "광주시", "이천시", "오산시", "안성시", "포천시", "양주시", "여주시", "동두천시", "연천군", "가평군", "양평군"
     ])
     
-    # 1. 남양주시 (정밀 분기 유지)
+    # 1. 남양주시 
+    
     if sigungu == "남양주시":
-        towns_100 = ["와부읍", "진접읍", "화도읍", "진건읍", "오남읍", "별내면", "수동면", "조안면", "퇴계원읍"]
-        towns_50 = ["호평동", "평내동", "금곡동", "양정동", "다산동", "별내동"]
-        dong = st.selectbox("세부 읍/면/동을 선택하세요", ["선택하세요"] + towns_100 + towns_50)
-        reduction_rate = 1.0 if dong in towns_100 else 0.5
-        zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
-        location_status = "외곽" if reduction_rate == 1.0 else "내" # 🚨 읍면은 '외곽', 동은 '내'
+        # 시행령 별표1에 언급된 과밀억제 제외 지역들 (100% 면제)
+        towns_100 = ["와부읍", "진접읍", "화도읍", "진건읍", "오남읍", "별내면", "수동면", "조안면", "퇴계원읍", "호평동", "평내동", "금곡동", "양정동", "다산동", "별내동"]
+        # 위 지역을 제외한 나머지 남양주 구역 (50% 감면)
+        towns_50 = ["남양주시 그 외 일반 동지역"] 
         
+        dong = st.selectbox("세부 읍/면/동을 선택하세요", ["선택하세요"] + towns_100 + towns_50)
+
+        if dong != "선택하세요":
+          reduction_rate = 1.0 if dong in towns_100 else 0.5
+          zone_name = "성장관리권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+          location_status = "외곽" if reduction_rate == 1.0 else "내" # 🚨 읍면은 '외곽', 동은 '내'
+          is_ready = True
+
     # 2. 시흥시 (글자 매칭 버그 해결, 칼같은 1:1 매칭 분기)
     elif sigungu == "시흥시":
         industrial_zones = ["정왕동 (시화MTV 구역)", "반월특수지역 지정구역", "시화공단 내부"]
         normal_zones = ["연성동", "신천동", "은행동", "매화동", "목감동", "군자동", "정왕동 (일반 주거지역)"]
         dong = st.selectbox("세부 지역 및 동을 선택하세요", ["선택하세요"] + industrial_zones + normal_zones)
-        reduction_rate = 1.0 if dong in industrial_zones else 0.5
-        zone_name = "성장관리권역 (반월특수지역 특례 - 100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
-        location_status = "외곽" if reduction_rate == 1.0 else "내" # 🚨 특수공단 구역은 '외곽', 일반 동은 '내'
+
+        if dong != "선택하세요":
+           reduction_rate = 1.0 if dong in industrial_zones else 0.5
+           zone_name = "성장관리권역 (반월특수지역 특례 - 100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+           location_status = "외곽" if reduction_rate == 1.0 else "내" # 🚨 특수공단 구역은 '외곽', 일반 동은 '내'
+           is_ready = True
 
     # 3. 안산시 (새로 추가된 혼재 지역 1)
     elif sigungu == "안산시":
         industrial_zones = ["반월국가산업단지 내부", "대부동 (대부도 전역)"]
         normal_zones = ["상록구 동지역 전체", "단원구 일반 동지역 전체"]
         dong = st.selectbox("세부 지역 및 동을 선택하세요", ["선택하세요"] + industrial_zones + normal_zones)
-        reduction_rate = 1.0 if dong in industrial_zones else 0.5
-        zone_name = "성장관리권역 (산업단지/지방 특례 - 100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
-        location_status = "외곽" if reduction_rate == 1.0 else "내"
+
+        if dong != "선택하세요":
+           reduction_rate = 1.0 if dong in industrial_zones else 0.5
+           zone_name = "성장관리권역 (산업단지/지방 특례 - 100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+           location_status = "외곽" if reduction_rate == 1.0 else "내"
+           is_ready = True
 
     # 4. 용인시 (새로 추가된 혼재 지역 2)
     elif sigungu == "용인시":
         towns_100 = ["처인구 포곡읍", "처인구 모현읍", "처인구 남사읍", "처인구 이동읍", "처인구 원삼면", "처인구 백암면", "처인구 양지면", "처인구 중앙동", "처인구 역삼동", "처인구 유림동", "처인구 동부동"]
         towns_50 = ["수지구 전역", "기흥구 전역", "처인구 구성동", "처인구 마북동", "처인구 동백동", "처인구 상하동"]
         dong = st.selectbox("세부 구/읍/면/동을 선택하세요", ["선택하세요"] + towns_100 + towns_50)
-        reduction_rate = 1.0 if dong in towns_100 else 0.5
-        zone_name = "자연보전권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
-        location_status = "외곽" if reduction_rate == 1.0 else "내"
+        if dong != "선택하세요":
+            reduction_rate = 1.0 if dong in towns_100 else 0.5
+            zone_name = "자연보전권역 (100% 면제)" if reduction_rate == 1.0 else "과밀억제권역 (50% 감면)"
+            location_status = "외곽" if reduction_rate == 1.0 else "내"
+            is_ready = True
 
     # 5. 화성시 (새로 추가된 혼재 지역 3)
     elif sigungu == "화성시":
         towns_50 = ["반월동", "병점1동", "병점2동", "진안동", "황계동", "기산동", "능동"]
         towns_100 = ["그 외 화성시 전역 (동탄신도시, 향남읍, 봉담읍, 남양읍, 우정읍, 마도면, 송산면 등)"]
-        dong = st.selectbox("세부 동/읍/면을 선택하세요", ["선택하세요"] + towns_100 + towns_50)
-        reduction_rate = 0.5 if dong in towns_50 else 1.0
-        zone_name = "과밀억제권역 예외지역 (50% 감면)" if reduction_rate == 0.5 else "성장관리권역 (100% 면제)"
-        location_status = "내" if reduction_rate == 0.5 else "외곽"
+        dong = st.selectbox("세부 동/읍/면을 선택하세요", ["선택하세요"] + towns_50 + towns_100)
+        if dong != "선택하세요":
+            reduction_rate = 0.5 if dong in towns_50 else 1.0
+            zone_name = "수도권 과밀억제권역 편입구역 (50% 감면)" if reduction_rate == 0.5 else "성장관리권역 (100% 면제)"
+            location_status = "내" if reduction_rate == 0.5 else "외곽"
+            is_ready = True
 
     # 6. 100% 과밀억제권역 (고양시 포함, 하남시 누락 수정)
     elif sigungu in ["수원시", "성남시", "안양시", "부천시", "광명시", "과천시", "의왕시", "군포시", "구리시", "하남시", "고양시"]:
@@ -145,44 +178,60 @@ elif sido == "경기도":
 # ==================== [4] 지방 5대 광역시 (지방 광역시는 구 단위 50%, 읍면 100% 분기) ====================
 elif sido in ["부산광역시", "대구광역시", "광주광역시", "대전광역시", "울산광역시"]:
     if sido == "부산광역시":
-        sigungu = st.selectbox("시/군/구를 선택하세요", ["해운대구", "수영구", "동래구", "금정구", "연제구", "부산진구", "남구", "북구", "사상구", "사하구", "중구", "동구", "서구", "영도구", "기장군", "강서구"])
-        reduction_rate = 1.0 if sigungu in ["기장군", "강서구"] else 0.5
+        sigungu = st.selectbox("시/군/구를 선택하세요", ["선택하세요", "해운대구", "수영구", "동래구", "금정구", "연제구", "부산진구", "남구", "북구", "사상구", "사하구", "중구", "동구", "서구", "영도구", "기장군", "강서구"])
+        if sigungu != "선택하세요":
+            reduction_rate = 1.0 if sigungu in ["기장군", "강서구"] else 0.5
+            is_ready = True
+
     elif sido == "대구광역시":
-        sigungu = st.selectbox("시/군/구를 선택하세요", ["중구", "동구", "서구", "남구", "북구", "수성구", "달서구", "달성군", "군위군"])
-        reduction_rate = 1.0 if sigungu in ["달성군", "군위군"] else 0.5
+        sigungu = st.selectbox("시/군/구를 선택하세요", ["선택하세요", "중구", "동구", "서구", "남구", "북구", "수성구", "달서구", "달성군", "군위군"])
+        if sigungu != "선택하세요":
+            reduction_rate = 1.0 if sigungu in ["달성군", "군위군"] else 0.5
+            is_ready = True
+            
     elif sido == "울산광역시":
-        sigungu = st.selectbox("시/군/구를 선택하세요", ["중구", "남구", "동구", "북구", "울주군"])
-        reduction_rate = 1.0 if sigungu == "울주군" else 0.5
+        sigungu = st.selectbox("시/군/구를 선택하세요", ["선택하세요", "중구", "남구", "동구", "북구", "울주군"])
+        if sigungu != "선택하세요":
+            reduction_rate = 1.0 if sigungu == "울주군" else 0.5
+            is_ready = True
+            
     else:
-        sigungu = st.selectbox("시/군/구를 선택하세요", ["전 지역 구"])
-        reduction_rate = 0.5
+        sigungu = st.selectbox("시/군/구를 선택하세요", ["선택하세요", "전 지역 구"])
+        if sigungu != "선택하세요":
+            reduction_rate = 0.5
+            is_ready = True
     zone_name = "지방 광역시 감면 요건 (100% 면제)" if reduction_rate == 1.0 else "지방 광역시 구 권역 (50% 감면)"
     location_status = "비수도권" # 🚨 광역시는 '비수도권'
 
 # ==================== [5] 순수 지방 도 지역 ====================
 elif sido in ["세종특별자치시", "충청남도", "충청북도", "전라남도", "전라북도", "경상남도", "경상북도", "강원특별자치도", "제주특별자치도"]:
     if sido == "충청남도":
-        sigungu = st.selectbox("시/군을 선택하세요", ["천안시", "아산시", "당진시", "서산시", "공주시", "논산시", "보령시", "계룡시", "홍성군", "예산군", "태안군", "금산군", "부여군", "서천군", "청양군"])
+        sigungu = st.selectbox("시/군을 선택하세요", ["선택하세요", "천안시", "아산시", "당진시", "서산시", "공주시", "논산시", "보령시", "계룡시", "홍성군", "예산군", "태안군", "금산군", "부여군", "서천군", "청양군"])
     elif sido == "전라남도":
-        sigungu = st.selectbox("시/군을 선택하세요", ["여수시", "순천시", "목포시", "광양시", "나주시", "무안군", "해남군", "고흥군", "화순군", "영암군", "영광군", "완도군", "담양군", "장성군", "보성군", "신안군", "진도군", "곡성군", "구례군", "함평군", "장흥군", "강진군"])
+        sigungu = st.selectbox("시/군을 선택하세요", ["선택하세요", "여수시", "순천시", "목포시", "광양시", "나주시", "무안군", "해남군", "고흥군", "화순군", "영암군", "영광군", "완도군", "담양군", "장성군", "보성군", "신안군", "진도군", "곡성군", "구례군", "함평군", "장흥군", "강진군"])
     elif sido == "경상남도":
-        sigungu = st.selectbox("시/군을 선택하세요", ["창원시", "김해시", "진주시", "양산시", "거제시", "통영시", "사천시", "밀양시", "함안군", "거창군", "창녕군", "고성군", "하동군", "합천군", "남해군", "함양군", "산청군", "의령군"])
+        sigungu = st.selectbox("시/군을 선택하세요", ["선택하세요", "창원시", "김해시", "진주시", "양산시", "거제시", "통영시", "사천시", "밀양시", "함안군", "거창군", "창녕군", "고성군", "하동군", "합천군", "남해군", "함양군", "산청군", "의령군"])
     elif sido == "경상북도":
-        sigungu = st.selectbox("시/군을 선택하세요", ["포항시", "구미시", "경산시", "경주시", "안동시", "김천시", "칠곡군", "영주시", "상주시", "영천시", "문경시", "의성군", "울진군", "예천군", "성주군", "청도군", "영덕군", "고령군", "봉화군", "부구군", "영양군", "울릉군"])
+        sigungu = st.selectbox("시/군을 선택하세요", ["선택하세요", "포항시", "구미시", "경산시", "경주시", "안동시", "김천시", "칠곡군", "영주시", "상주시", "영천시", "문경시", "의성군", "울진군", "예천군", "성주군", "청도군", "영덕군", "고령군", "봉화군", "부구군", "영양군", "울릉군"])
     else:
         sigungu = st.selectbox("시/군/구를 선택하세요", ["기타 시/군/구 전체"])
-        
-    reduction_rate = 1.0
-    zone_name = "수도권 외 지방 청년창업 특례 지역 (100% 전액 면제)"
-    location_status = "비수도권" # 🚨 일반 지방 도 지역은 '비수도권'
+
+    if sigungu != "선택하세요":    
+       reduction_rate = 1.0
+       zone_name = "수도권 외 지방 청년창업 특례 지역 (100% 전액 면제)"
+       location_status = "비수도권" # 🚨 일반 지방 도 지역은 '비수도권'
+       is_ready = True
+
+
+
 
 # 결과 출력부
 if reduction_rate > 0.0:
-    
     st.write(f"### 🔍 전국 마이크로 주소 연산 결과")
     st.success(f"⚖️ 법적 분류: **{zone_name}**")
     st.success(f"🎉 **선택하신 {sido} {sigungu}의 청년 창업세액감면율은 {int(reduction_rate * 100)}% 입니다.**") 
-    st.markdown("---")
+    st.caption(f"ℹ️ 조세특례제한법 제6조에 따라 본 혜택은 **2027년 12월 31일 이전 창업자**에게만 한시적으로 유효합니다.")
+    st.markdown("---") 
 
 
 # 2. 사용자 입력 섹션 (UI 구성)
@@ -195,7 +244,7 @@ with col1:
     st.subheader("[1] 기본 정보 및 창업 업종")
     
     # 1. 만 나이 입력
-    age = st.number_input("현재 만 나이를 입력하세요", min_value=0, max_value=100, value=25)
+    age = st.number_input("현재 만 나이를 입력하세요", min_value=0, max_value=100, value=23)
 
     # 2. 군 복무 특례 UI 추가 (기존 코드에 자연스럽게 녹아듬)
     has_served = st.radio("군 복무(병역 이행) 여부를 선택하세요", ["미필/해당 없음(여성 포함)", "군필(병역 이행 완료)"])
@@ -246,27 +295,27 @@ with col2:
         expected_sales = 0.0
         st.error("매출액에는 숫자와 콤마(,)만 입력할 수 있습니다.")
 
-    income_rate = st.slider("예상 매출액 대비 순이익률(%)을 선택하세요 (종합소득세 산출 기준)", min_value=1, max_value=100, value=30)
+    income_rate = st.slider("예상 매출액 대비 순이익률(%)을 선택하세요 (종합소득세 산출 기준)", min_value=1, max_value=100)
     # 진짜 소득금액(과세표준 대용) 수학적 연산
     estimated_income = expected_sales * (income_rate / 100)
     
     bookkeeping = st.radio("사업 장부를 스스로 작성하여 신고하실 계획인가요?", ["네, 스스로 작성하겠습니다.", "아니오, 장부 없이 간편하게 신고하겠습니다."])
     
     # 텍스트가 아닌 실제 채용 인원 '숫자'를 입력받아 연산에 활용
-    employee_count = st.number_input("채용할 청년 정규직 직원 수를 입력하세요 (명)", min_value=0, max_value=100, value=0)
+    employee_count = st.number_input("채용할 청년 정규직 직원 수를 입력하세요 (명)", min_value=0, max_value=100)
     
     
     initial_investment = st.radio("초기에 대규모 인테리어나 고가 장비 구입 계획이 있으신가요?", ["없음 (소자본 창업)", "있음 (인테리어 및 시설 자금 대량 투입)"])
     investment_amount = 0.0
 
     if initial_investment == "있음 (인테리어 및 시설 자금 대량 투입)":
-        investment_input = st.text_input("예상되는 초기 시설 투자 금액(인테리어, 장비 등 공급가액)을 입력하세요 (원 단위)", value="50,000,000")
+        investment_input = st.text_input("예상되는 초기 시설 투자 금액(인테리어, 장비 등 공급가액)을 입력하세요 (원 단위)")
         try:
               investment_amount = float(investment_input.replace(",", ""))
         except ValueError:
               investment_amount = 0.0
 
-    donation_input = st.text_input("연간 예상되는 사회공헌 기부 금액을 입력하세요 (원 단위)", value="0")
+    donation_input = st.text_input("연간 예상되는 사회공헌 기부 금액을 입력하세요 (원 단위)")
     try:
         donation_amount = float(donation_input.replace(",", ""))
     except ValueError:
@@ -295,7 +344,7 @@ with col2:
     
     if gift_plan == "있음":
         st.caption("💡 [조특법 제30조의5] 창업자금 증여세 과세특례 시뮬레이션이 활성화됩니다.")
-        gift_input = st.text_input("증여받을(혹은 지원받은) 예상 창업자금을 입력하세요 (원 단위)", value="600,000,000")
+        gift_input = st.text_input("증여받을(혹은 지원받은) 예상 창업자금을 입력하세요 (원 단위)")
         try:
             gift_amount = float(gift_input.replace(",", ""))
         except ValueError:
@@ -334,7 +383,9 @@ if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"
     # 국가 누진세율 함수를 실행하여 기본 산출세액 도출
     base_tax = calculate_progressive_tax(estimated_income)
     
-    status_kr = {"내": "수도권 과밀억제권역 내(핵심지)", "외곽": "수도권 과밀억제권역 외곽(성장관리지역 등)", "비수도권": "비수도권 지방지역"}[location_status]
+
+    #세법상 권역 분류 명칭 정밀화
+    status_kr = {"내": "수도권 과밀억제권역(또는 법정 편입구역)", "외곽": "수도권 과밀억제권역 외(성장관리·자연보전·특례산단)", "비수도권": "비수도권 지방지역"}[location_status]
     st.success(f"📍 선택하신 주소는 세법상 [{status_kr}]으로 분류되었습니다.")
     
     res_col1, res_col2 = st.columns(2)
@@ -360,6 +411,7 @@ if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"
             st.write(f"- 예상 순이익: **{int(estimated_income):,}원**")
             st.write(f"- 가상 산출소득세: **{int(base_tax):,}원**")
             st.write(f"- **최종 소득세 감면 혜택 액수: 약 {int(tax_savings):,}원 (5년간 매년 절세 가능)**")
+            st.caption("⚠️ 본 감면 혜택은 법률상 **2027년 12월 31일 이전 창업자**에게만 유효하므로 기한 내 창업 및 사업자등록이 필수적입니다.")
 
         # B. 통합고용세액공제 연산 (조특법 제29조의7)
     
@@ -395,21 +447,63 @@ if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"
             st.write(f"  * **고용 유지 실패 시 최대 예상 추징 세액: {int(raw_employment_savings):,}원**")
 
         # C. 기부금 세액공제 연산 (소득세법 제59조의4)
-        if donation_amount > 0:
-            donation_savings = donation_amount * 0.15
-            st.success(f"🕊️ **[소득세법 제59조의4] 기부금 절세 혜택 계산**")
-            st.write(f"- 입력한 사회공헌 기부액: **{int(donation_amount):,}원**")
-            st.write(f"- **추계신고 시 최종 소득세 직접 차감액: {int(donation_savings):,}원 (지출액의 15%)**")
+    
 
-        # D. 장부 미기장 가산세 연산 (소득세법 제81조의5)
+        # ========== [C. 기부금 한도 및 절세액 정밀 연산 엔진] ==========
+        if donation_amount > 0:
+            st.info(f"🕊️ **[소득세법 제34조] 기부금 필요경비 한도 및 절세 정밀 진단**")
+            st.write(f"- 입력한 연간 예상 기부액: **{int(donation_amount):,}원**")
+            
+            if is_self_book:
+                # 1. 장부 기장 사업자: 필요경비(비용) 산입 한도 계산
+                # 기준소득금액 = 기부금 차감 전 순이익 (estimated_income)
+                base_income = estimated_income 
+                
+                # 일반 지정기부금 한도 범위 계산 (기준소득금액의 30%를 대중적인 마지노선으로 설정)
+                donation_limit = base_income * 0.30
+                
+                st.write(f"- 세법상 기부금 인정 한도액 (순이익의 30%): **{int(donation_limit):,}원**")
+                
+                if donation_amount > donation_limit:
+                    # 한도를 초과한 경우
+                    actual_expense = donation_limit
+                    over_limit_amount = donation_amount - donation_limit
+                    
+                    st.warning(f"⚠️ **[기부금 한도 초과]** 입력하신 기부금이 올해 비용 인정 한도를 초과했습니다.")
+                    st.write(f"  * **금년도 실제 비용(필요경비) 반영액: {int(actual_expense):,}원**")
+                    st.write(f"  * **다음 해로 이월되는 기부금: {int(over_limit_amount):,}원** (향후 10년간 이월하여 비용 처리 가능)")
+                else:
+                    # 한도 내에 여유롭게 들어온 경우
+                    actual_expense = donation_amount
+                    st.success(f"✅ **[한도 내 전액 인정]** 기부금 {int(actual_expense):,}원 전액이 올해 사업 비용으로 정상 인정됩니다.")
+                
+                # 기부금으로 인해 실제로 아끼는 대략적인 소득세 환산 (순이익이 줄어든 효과)
+                # (간이 시뮬레이션을 위해 산출세액 비율로 절세 효과 대리 연산)
+                if base_income > 0:
+                    approx_tax_rate = base_tax / base_income
+                    saved_tax = actual_expense * approx_tax_rate
+                    st.write(f"  * **기부금 지출로 인한 올해 소득세 실질 절감액: 약 {int(saved_tax):,}원**")
+
+            else:
+                # 2. 장부를 안 쓰는 추계신고 사업자: 소득세법 제59조의4 세액공제 특례 적용
+                donation_savings = donation_amount * 0.15
+                st.success(f"🎉 **[소득세법 ] 기부금 특별세액공제 적용 (추계신고 특례)**")
+                st.write("- 장부 없이 추계신고를 하시는 경우 예외적으로 세액공제 15%가 준용됩니다.")
+                st.write(f"- **이번 해 최종 소득세 직접 차감액: {int(donation_savings):,}원 (지출액의 15%)**")    
+
+    
+        # ========== [D. 장부 미기장 가산세 연산 수정] ==========
         st.subheader("2. 장부 작성 및 가산세 리스크 (소득세법)")
         if is_self_book:
-            st.success("✅ **[소득세법 제70조] 장부 기장 신고 예정 (가산세 위험 없음)**")
+            # 정식 조항인 제160조(장부의 비치·기록) 적용
+            st.success("✅ **[소득세법 제160조] 장부의 비치·기록 의무 이행 예정 (가산세 위험 없음)**")
+            st.write("- 스스로 장부를 작성하여 정식 기장 신고를 진행하므로 세법상 무기장가산세 대상에서 제외됩니다.")
         else:
+            # 정식 조항인 제81조의5(무기장가산세) 적용
             penalty_tax = base_tax * 0.20
             st.error("🚨 **[소득세법 제81조의5] 무기장가산세 처분 리스크 노출**")
-            st.write(f"- 장부 미작성 및 추계신고 시 소득세 산출세액의 **20% 패널티**가 부과됩니다.")
-            st.write(f"- **예상 부과 가산세 리스크 액수: 약 {int(penalty_tax):,}원 부과 주의**")
+            st.write(f"- 장부를 작성하지 않고 추계신고를 하는 경우, 세법에 따라 산출세액의 **20% 패널티**가 부과됩니다.")
+            st.write(f"- **예상 부과 가산세 리스크 액수: 약 {int(penalty_tax):,}원 부과 주의**")    
 
     with res_col2:
         st.subheader("3. 부가가치세 면제 및 환급 특례 (부가가치세법)")
@@ -516,6 +610,15 @@ if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"
             st.write("창업자금 증여 계획이 없으므로 증여세 특례 시뮬레이션을 종료합니다.")
 
 st.markdown("---")
+# ========== [코드 맨 최하단에 이어서 붙여넣기] ==========
+st.info("⚖️ **법적 면책 고지 및 이용 안내**")
+st.caption(
+    "1. 본 시뮬레이션 결과는 사용자가 입력한 데이터를 바탕으로 현행 법 조문을 매칭한 단순 참고용 결과입니다.\n"
+    "2. 특히 창업 지역의 경우, 수도권정비계획법 시행령 [별표 1]에 명시된 시흥 반월특수지역, 경제자유구역 등 세부 지번에 따른 과밀억제권역 제외 특례가 존재하므로 실제 필지(지번)에 따라 감면율 오차가 발생할 수 있습니다.\n"
+    "3. 실제 세금 신고 시에는 개별 기업의 창업 당시 만 나이 요건, 병역 이행 기간 증빙,실제 통계청 표준산업분류 기준에 따른 정밀 업종 판정, 상시 근로자 수 유지 여부 등에 따라 결과가 완전히 달라질 수 있습니다.\n"
+    "4. 세법의 해석과 적용은 과세관청(국세청)의 판단에 따라 차이가 있을 수 있으므로,본 결과를 근거로 한 실제 투자나 창업 결정으로 인해 발생하는 세무상 불이익에 대해 본 프로그램은 법적 책임을 지지 않습니다.\n"
+    "5. **정확한 세액 감면 및 신고를 위해 사업자등록 전 전문 세무사와의 상담을 권장합니다.**"
+        )       
 st.markdown("### 🔗 2026년 현행세법 공식 근거 및 출처")
 st.markdown("- [국세법령정보시스템(NTIS) 공식 홈페이지](https://taxlaw.nts.go.kr/index.do;jsessionid=SMNCQgnjqZItG2EMTasnlm6zqswMe0hBAFBJ-zYD.cpesiwsp01_SE12)")
 st.markdown("- [국가법령정보센터](https://www.law.go.kr/)")
