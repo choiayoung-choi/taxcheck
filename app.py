@@ -571,7 +571,7 @@ if st.button("📊 나의 현행세법 종합 혜택 및 리스크 진단하기"
           st.warning("⚠️ **[세법 기준 고지]** 본 공제는 대표자 본인, 배우자 및 직계존비속을 제외한 **'4대보험 가입 정규직 직원(상시근로자)'** 채용 시에만 적용됩니다.")
     
           st.write(f"- 청년 채용 인원 (대표자 제외): **{employee_count}명** (최초 사업연도 인당 {per_person_value:,}원 적용)")
-          st.write(f"- **이론상 금년도 세액공제액(수식 A): {int(annual_employment_savings):,}원**")
+          st.write(f"- **이론상 금년도 세액공제액: {int(annual_employment_savings):,}원**")
     
     
     # [핵심 고증] 조특법 제132조에 따른 개인사업자 최저한세(35%) 한도 필터링 엔지니어링
